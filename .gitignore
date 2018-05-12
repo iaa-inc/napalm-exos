@@ -1,0 +1,4 @@
+.vscode/
+testing.py
+*.pyc
+napalm_exos.egg-info/
