@@ -13,4 +13,4 @@
 # the License.
 
 """napalm-exos package."""
-from exos import ExosDriver
+from napalm_exos.exos import ExosDriver
