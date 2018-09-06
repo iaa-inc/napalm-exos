@@ -1,0 +1,2 @@
+include requirements*
+include napalm_exos/utils/textfsm_templates/*.tpl
