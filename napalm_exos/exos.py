@@ -27,7 +27,7 @@ from napalm.base.exceptions import (
     CommandErrorException,
     )
 from netmiko import ConnectHandler, SCPConn
-from textfsm import TextFSM
+from napalm.base.helpers import textfsm_extractor
 
 import logging
 import re
@@ -83,46 +83,39 @@ class ExosDriver(NetworkDriver):
         return configs
 
     def get_optics(self, interface=None):
-        template_path = os.path.join(self._template_location(), 'show_ports_transceiver_information_detail.tpl')
-        template = open(template_path)
-        re_table = TextFSM(template)
-        
-        command = 'show ports transceiver information detail'
-        show_ports = self.device.send_command(command)
-
-        structured = re_table.ParseText(show_ports)
+        structured = self._get_and_parse_output('show ports transceiver information detail')
         optics = {}
 
         for item in structured:
-            if not item[8] or item[8] == "1":  # First / only channel
-                optics[item[0]] = {}
-                optics[item[0]]["physical_channels"] = {}
-                optics[item[0]]["physical_channels"]["channel"] = []
-
+            if not item['channel'] or item['channel'] == '1':  # First / only channel
+                optics[item['port_number']] = {}
+                optics[item['port_number']]['physical_channels'] = {}
+                optics[item['port_number']]['physical_channels']['channel'] = []
+            
             channel = {
-                "index": int(item[8]) - 1 if item[8] else 0,
+                "index": int(item['channel']) - 1 if item['channel'] else 0,
                 "state": {
                     "input_power": {
-                        "instant": float(item[9] or '0.0'),
+                        "instant": float(item['rx_power_dbm'].strip('*').strip('-inf') or '0.0'),
                         "avg": 0.0,
                         "min": 0.0,
                         "max": 0.0
                     },
                     "output_power": {
-                        "instant": float(item[10] or '0.0'),
+                        "instant": float(item['tx_power_dbm'].strip('*').strip('-inf') or '0.0'),
                         "avg": 0.0,
                         "min": 0.0,
                         "max": 0.0
                     },
                     "laser_bias_current": {
-                        "instant": float(item[11] or '0.0'),
+                        "instant": float(item['tx_current_ma'].strip('*').strip('-inf') or '0.0'),
                         "avg": 0.0,
                         "min": 0.0,
                         "max": 0.0
                     }
                 }
             }
-            optics[item[0]]["physical_channels"]["channel"].append(channel)
+            optics[item['port_number']]['physical_channels']['channel'].append(channel)
 
         return optics
 
@@ -135,6 +128,136 @@ class ExosDriver(NetworkDriver):
             output[cmd] = cmd_output
 
         return output
+
+    #TODO: Get Arp Table
+    def get_arp_table(self):
+        pass
+
+    def get_bgp_config(self, group=u'', neighbor=u''):
+        pass
+    
+    def get_bgp_neighbors(self):
+        pass
+
+    def get_bgp_neighbors_detail(self, neighbor_address=u''):
+        pass
+
+    def get_environment(self):
+        pass
+
+    def get_facts(self):
+        pass
+
+    def get_firewall_policies(self):
+        pass
+
+    def get_interfaces(self):
+        pass
+
+    def get_interfaces_counters(self):
+        pass
+
+    def get_interfaces_ip(self):
+        pass
+
+    def get_ipv6_neighbors_table(self):
+        pass
+
+    def get_lldp_neighbors(self):
+        lldp_neighbors = self._get_and_parse_output(
+            'show lldp neighbors')
+        return lldp_neighbors
+
+    def get_lldp_neighbors_detail(self, interface=u''):
+        pass
+
+    def get_mac_address_table(self):
+        pass
+
+    def get_network_instances(self, name=u''):
+        pass
+
+    def get_ntp_peers(self):
+        pass
+
+    def get_ntp_servers(self):
+        pass
+
+    def get_ntp_stats(self):
+        pass
+
+    def get_probes_config(self):
+        pass
+
+    def get_probes_results(self):
+        pass
+
+    def get_route_to(self, destination=u'', protocol=u''):
+        pass
+
+    def get_snmp_information(self):
+        pass
+
+    def get_users(self):
+        pass
+
+    # OSPF
+    def get_ospf_interfaces(self):
+        ospf_interfaces = self._get_and_parse_output(
+            'show ospf interfaces detail')
+
+        return ospf_interfaces
+
+    def get_ospf_neighbors(self):
+        ospf_neighbors = self._get_and_parse_output(
+            'show ospf neighbor detail')
+        return ospf_neighbors
+
+    # MPLS
+    def get_mpls_interfaces(self):
+        mpls_interfaces = self._get_and_parse_output(
+            'show mpls interface detail')
+
+        return mpls_interfaces
+
+    # MPLS / LDP
+    def get_mpls_ldp_peers(self):
+        ldp_peers = self._get_and_parse_output(
+            'show mpls ldp peer')
+
+        return ldp_peers
+    
+    # MPLS / RSVP
+    def get_mpls_rsvp_neighbors(self):
+        rsvp_neighbors = self._get_and_parse_output(
+            'show mpls rsvp-te neighbor detail')
+
+        return rsvp_neighbors
+    
+    # MPLS / VPLS
+    def get_mpls_l2vpn_vpls(self):
+        pass
+
+    def get_mpls_l2vpn_summary(self):
+        pass
+
+
+
+
+
+    def ping(destination, source=u'', ttl=255,
+          timeout=2, size=100, count=5, vrf=u''):
+          pass
+    def traceroute(destination, source=u'', ttl=255, timeout=2, vrf=u''):
+        pass
+
+
+    def _get_and_parse_output(self, command):
+        output = self.device.send_command(command)
+        #TODO: handle file not found, parse error, blank result?
+        structured = textfsm_extractor(self, command.replace(' ', '_'), output)
+        return structured
+
 
     @staticmethod
     def _template_location():

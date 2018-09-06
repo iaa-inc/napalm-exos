@@ -1,15 +1,15 @@
-Value Filldown port_number (\d+)
+Value Filldown port_number (\S+)
 Value media_type (.+)
 Value vendor_name (.+)
-Value part_number (.+)
-Value serial_number (.+)
+Value part_number (\S+)
+Value serial_number (\S+)
 Value wavelength (\d+)
-Value temp_celcius (-?\d+\.\d+)
-Value voltage (\d+\.\d+)
+Value temp_celcius (\S+)
+Value voltage (\S+)
 Value channel (\d+)
-Value rx_power_dbm (-?\d+\.\d+|-inf)
-Value tx_power_dbm (-?\d+\.\d+)
-Value tx_current_ma (\d+\.\d+)
+Value rx_power_dbm (\S+)
+Value tx_power_dbm (\S+)
+Value tx_current_ma (\S+)
 
 Start
 	^Port :\s+${port_number}
