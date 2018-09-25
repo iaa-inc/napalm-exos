@@ -202,37 +202,44 @@ class ExosDriver(NetworkDriver):
         pass
 
     # OSPF
+    def get_ospf(self):
+        ospf_config = self._get_and_parse_output(
+            'show ospf')
+
+        return self._key_textfsm_data(ospf_config, '', override_key='global')
+
     def get_ospf_interfaces(self):
         ospf_interfaces = self._get_and_parse_output(
             'show ospf interfaces detail')
 
-        return ospf_interfaces
+        return self._key_textfsm_data(ospf_interfaces, 'vlan')
 
     def get_ospf_neighbors(self):
         ospf_neighbors = self._get_and_parse_output(
             'show ospf neighbor detail')
-        return ospf_neighbors
+
+        return self._key_textfsm_data(ospf_neighbors, 'neighbor')
 
     # MPLS
     def get_mpls_interfaces(self):
         mpls_interfaces = self._get_and_parse_output(
             'show mpls interface detail')
 
-        return mpls_interfaces
+        return self._key_textfsm_data(mpls_interfaces, 'vlan')
 
     # MPLS / LDP
     def get_mpls_ldp_peers(self):
         ldp_peers = self._get_and_parse_output(
             'show mpls ldp peer')
 
-        return ldp_peers
+        return self._key_textfsm_data(ldp_peers, 'peer')
     
     # MPLS / RSVP
     def get_mpls_rsvp_neighbors(self):
         rsvp_neighbors = self._get_and_parse_output(
             'show mpls rsvp-te neighbor detail')
 
-        return rsvp_neighbors
+        return self._key_textfsm_data(rsvp_neighbors, 'neighbor_addr')
     
     # MPLS / VPLS
     def get_mpls_l2vpn_vpls(self):
@@ -241,14 +248,10 @@ class ExosDriver(NetworkDriver):
     def get_mpls_l2vpn_summary(self):
         pass
 
-
-
-
-
-    def ping(destination, source=u'', ttl=255,
+    def ping(self, destination, source=u'', ttl=255,
           timeout=2, size=100, count=5, vrf=u''):
           pass
-    def traceroute(destination, source=u'', ttl=255, timeout=2, vrf=u''):
+    def traceroute(self, sdestination, source=u'', ttl=255, timeout=2, vrf=u''):
         pass
 
 
@@ -258,10 +261,18 @@ class ExosDriver(NetworkDriver):
         structured = textfsm_extractor(self, command.replace(' ', '_'), output)
         return structured
 
+    def _key_textfsm_data(self, textfsm_data, key, override_key=""):
+        data = {}
 
-    @staticmethod
-    def _template_location():
-        return os.path.join(os.path.dirname(__file__), 'utils', 'textfsm_templates')
+        for item in textfsm_data:
+            new_key = ""
+            if override_key: #nasty hack for reasons
+                new_key = override_key
+            else:
+                new_key = item[key]
+                del item[key]
+            data[new_key] = item
+        return data
 
     def _create_temp_file(self, content, extension, name=None):
         # create a temp file with option name, defaults to random UUID
