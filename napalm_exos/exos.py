@@ -34,7 +34,8 @@ logging.basicConfig()
 class ExosDriver(NetworkDriver):
     """Napalm driver for Extreme Networks EXOS."""
 
-    def __init__(self, hostname, username, password, timeout=60, optional_args={}):
+    def __init__(self, hostname, username, password, timeout=60,
+                 optional_args={}):
         """Constructor."""
         self.device = None
         self.hostname = hostname
@@ -49,7 +50,7 @@ class ExosDriver(NetworkDriver):
     def open(self):
         """Implementation of NAPALM method open."""
         self.device = ConnectHandler(
-            device_type = 'extreme',
+            device_type='extreme',
             ip=self.hostname,
             username=self.username,
             password=self.password,
@@ -65,8 +66,8 @@ class ExosDriver(NetworkDriver):
         # EXOS doesn't support candidate configuration
         # TODO: support startup configuration (saved)
         configs = {
-            'startup' : '',
-            'running' : '',
+            'startup': '',
+            'running': '',
         }
 
         configs['running'] = self.device.send_command('show configuration')
@@ -74,7 +75,9 @@ class ExosDriver(NetworkDriver):
         return configs
 
     def get_optics(self, interface=None):
-        structured = self._get_and_parse_output('show ports transceiver information detail')
+        structured = self._get_and_parse_output(
+                        'show ports transceiver information detail'
+                     )
         optics = {}
 
         for item in structured:
@@ -82,7 +85,7 @@ class ExosDriver(NetworkDriver):
                 optics[item['port_number']] = {}
                 optics[item['port_number']]['physical_channels'] = {}
                 optics[item['port_number']]['physical_channels']['channel'] = []
-            
+
             channel = {
                 "index": int(item['channel']) - 1 if item['channel'] else 0,
                 "state": {
@@ -120,13 +123,13 @@ class ExosDriver(NetworkDriver):
 
         return output
 
-    #TODO: Get Arp Table
+    # TODO: Get Arp Table
     def get_arp_table(self):
         pass
 
     def get_bgp_config(self, group=u'', neighbor=u''):
         pass
-    
+
     def get_bgp_neighbors(self):
         pass
 
@@ -224,14 +227,14 @@ class ExosDriver(NetworkDriver):
             'show mpls ldp peer')
 
         return self._key_textfsm_data(ldp_peers, 'peer')
-    
+
     # MPLS / RSVP
     def get_mpls_rsvp_neighbors(self):
         rsvp_neighbors = self._get_and_parse_output(
             'show mpls rsvp-te neighbor detail')
 
         return self._key_textfsm_data(rsvp_neighbors, 'neighbor_addr')
-    
+
     # MPLS / VPLS
     def get_mpls_l2vpn_vpls(self):
         output = self.device.send_command("show l2vpn vpls detail")
@@ -263,15 +266,16 @@ class ExosDriver(NetworkDriver):
         pass
 
     def ping(self, destination, source=u'', ttl=255,
-          timeout=2, size=100, count=5, vrf=u''):
-          pass
-    def traceroute(self, sdestination, source=u'', ttl=255, timeout=2, vrf=u''):
+             timeout=2, size=100, count=5, vrf=u''):
         pass
 
+    def traceroute(self, sdestination, source=u'', ttl=255, timeout=2,
+                   vrf=u''):
+        pass
 
     def _get_and_parse_output(self, command):
         output = self.device.send_command(command)
-        #TODO: handle file not found, parse error, blank result?
+        # TODO: handle file not found, parse error, blank result?
         structured = textfsm_extractor(self, command.replace(' ', '_'), output)
         return structured
 
@@ -280,7 +284,7 @@ class ExosDriver(NetworkDriver):
 
         for item in textfsm_data:
             new_key = ""
-            if override_key: #nasty hack for reasons
+            if override_key:  # nasty hack for reasons
                 new_key = override_key
             else:
                 new_key = item[key]
@@ -291,7 +295,7 @@ class ExosDriver(NetworkDriver):
     def _create_temp_file(self, content, extension, name=None):
         # create a temp file with option name, defaults to random UUID
         # e.g. _create_temp_file(config, "pol", name="AS6500-POLICY-IN")
-        
+
         tmp_dir = tempfile.gettempdir()
 
         if not name:
@@ -308,8 +312,7 @@ class ExosDriver(NetworkDriver):
 
     def _transfer_file_scp(self, source_file, destination_file):
         scp_conn = SCPConn(self.device)
-        scp_conn.scp_transfer_file(source_file,destination_file)
-
+        scp_conn.scp_transfer_file(source_file, destination_file)
 
     def load_merge_candidate(self, filename=None, config=None):
         # SCP config snippet to device.
@@ -358,9 +361,3 @@ class ExosDriver(NetworkDriver):
                 return configuration
         else:
             raise NotImplementedError
-
-
-
-
-
-
