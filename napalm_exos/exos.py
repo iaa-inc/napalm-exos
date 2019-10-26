@@ -243,7 +243,30 @@ class ExosDriver(NetworkDriver):
     
     # MPLS / VPLS
     def get_mpls_l2vpn_vpls(self):
-        pass
+        output = self.device.send_command("show l2vpn vpls detail")
+        # extract vpls entries
+        vpls = textfsm_extractor(self, 'show_l2vpn_vpls_detail', output)
+        # extract peers
+        peers = textfsm_extractor(self, 'show_l2vpn_vpls_detail_peer', output)
+        # combine the above, matching on vpn_id
+        for v in vpls:
+            p = list(filter(lambda x: x['vpn_id'] == v['vpn_id'], peers))
+            v['peers'] = p
+
+        return vpls
+
+    def get_mpls_l2vpn_vpws(self):
+        output = self.device.send_command("show l2vpn vpws detail")
+        # extract vpws entries
+        vpws = textfsm_extractor(self, 'show_l2vpn_vpws_detail', output)
+        # extract peers
+        peers = textfsm_extractor(self, 'show_l2vpn_vpws_detail_peer', output)
+        # combine the above, matching on vpn_id
+        for v in vpws:
+            p = list(filter(lambda x: x['vpn_id'] == v['vpn_id'], peers))
+            v['peers'] = p
+
+        return vpws
 
     def get_mpls_l2vpn_summary(self):
         pass
