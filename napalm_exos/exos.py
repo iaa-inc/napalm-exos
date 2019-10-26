@@ -19,22 +19,13 @@ Read https://napalm.readthedocs.io for more information.
 """
 from napalm.base.base import NetworkDriver
 from napalm.base.utils import py23_compat
-from napalm.base.exceptions import (
-    ConnectionException,
-    SessionLockedException,
-    MergeConfigException,
-    ReplaceConfigException,
-    CommandErrorException,
-    )
 from netmiko import ConnectHandler, SCPConn
 from napalm.base.helpers import textfsm_extractor
 
 import logging
-import re
 import os
 import uuid
 import tempfile
-import copy
 import jinja2
 
 logging.basicConfig()
