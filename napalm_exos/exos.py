@@ -235,32 +235,21 @@ class ExosDriver(NetworkDriver):
 
         return self._key_textfsm_data(rsvp_neighbors, 'neighbor_addr')
 
-    # MPLS / VPLS
-    def get_mpls_l2vpn_vpls(self):
-        output = self.device.send_command("show l2vpn vpls detail")
-        # extract vpls entries
-        vpls = textfsm_extractor(self, 'show_l2vpn_vpls_detail', output)
-        # extract peers
-        peers = textfsm_extractor(self, 'show_l2vpn_vpls_detail_peer', output)
-        # combine the above, matching on vpn_id
-        for v in vpls:
-            p = list(filter(lambda x: x['vpn_id'] == v['vpn_id'], peers))
-            v['peers'] = p
+    def get_l2vpn(self, l2vpn_type=None):
+        if l2vpn_type is None:
+            l2vpn = self._get_and_parse_output('show l2vpn detail')
+        elif l2vpn_type == "vpls":
+            l2vpn = self._get_and_parse_output('show l2vpn vpls detail')
+        elif l2vpn_type == "vpws":
+            l2vpn = self._get_and_parse_output('show l2vpn vpws detail')
 
-        return vpls
+        return l2vpn
 
-    def get_mpls_l2vpn_vpws(self):
-        output = self.device.send_command("show l2vpn vpws detail")
-        # extract vpws entries
-        vpws = textfsm_extractor(self, 'show_l2vpn_vpws_detail', output)
-        # extract peers
-        peers = textfsm_extractor(self, 'show_l2vpn_vpws_detail_peer', output)
-        # combine the above, matching on vpn_id
-        for v in vpws:
-            p = list(filter(lambda x: x['vpn_id'] == v['vpn_id'], peers))
-            v['peers'] = p
+    def get_l2vpn_vpls(self):
+        return self.get_l2vpn(l2vpn_type="vpls")
 
-        return vpws
+    def get_l2vpn_vpws(self):
+        return self.get_l2vpn(l2vpn_type="vpws")
 
     def get_mpls_l2vpn_summary(self):
         pass
