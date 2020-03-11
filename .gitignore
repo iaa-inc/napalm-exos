@@ -3,3 +3,5 @@ testing.py
 *.pyc
 napalm_exos.egg-info/
 napalm_exos/utils/textfsm_templates/*.txt
+build/
+dist/

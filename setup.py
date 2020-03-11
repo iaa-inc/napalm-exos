@@ -15,7 +15,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 
 setup(
     name="napalm-exos",
-    version="0.1.0",
+    version="0.1.1",
     packages=find_packages(),
     author="Tim Raphael",
     author_email="raphael.timothy@gmail.com",
@@ -32,4 +32,5 @@ setup(
     url="https://github.com/tardoe/napalm-exos",
     include_package_data=True,
     install_requires=reqs,
+    zip_safe=False,
 )
